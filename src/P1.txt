@@ -1,0 +1,96 @@
+/*
+ *
+ * @file           : main.cpp
+ * 
+ * @brief          : Main program
+ * 
+ */
+
+/* includes */
+#include <Arduino.h>
+#include "HAL_GPIO.h"
+
+/* Defines */
+// Tiempo retentivo
+#define TOFF 5000
+
+/* Variables */
+// Variables lectura pines
+uint8_t AUTO, MANUAL, SEN, BTN;
+// Variable tiempo de referencia
+long t;
+// variable seleccion
+bool sel, estado, ant;
+
+/* Setup */
+void setup()
+{
+  // PD0=SEL, PD1=SEN, PD2=BTN, PD3=LED, PD4=FOCO, T=5SEG
+  // Primeros 3 entradas, demas salidas
+  DDRD = 0xFC;
+  DDRB = 0X1;
+  // Apagamos salidas y ponemos entradas en pullup
+  PORTD = 0x3;
+  PORTB = 0xC;
+}
+
+/* Loop */
+void loop()
+{
+  // Lectura btn1
+  AUTO = HAL_ReadPU(PIND, 0);
+  // Lectura btn2
+  MANUAL = HAL_ReadPU(PIND, 1);
+  // Lectura sensor
+  SEN = HAL_ReadPU(PINB, 3);
+
+  if ((PIND & 0x3) == 2)
+    sel = true;
+  else if ((PIND & 0x3) == 1)
+    sel = false;
+
+  // Selector modo auto
+  if (sel)
+  {
+    // Led Auto/Manual
+    HAL_Set(PORTB, 0);
+    // Si el sensor esta activado
+    if (SEN)
+    {
+      // Encender foco
+      HAL_Set(PORTD, 3);
+      // Tiempo de referencia igual a 0
+      t = millis();
+    }
+    // Si el sensor no esta
+    else
+    {
+      // Si han pasado 5 segundos desde el tiempo de referencia
+      if ((millis() - t) >= TOFF)
+        // Apagar foco
+        HAL_Reset(PORTD, 3);
+    }
+  }
+  // Selector modo manual
+  else
+  {
+    // Led Auto/Manual
+    HAL_Reset(PORTB, 0);
+    // Lectura btn3
+    if (HAL_ReadPU(PINB, 2) && !estado && HAL_ReadPU(PINB, 2) != ant)
+    {
+      HAL_Set(PORTD, 3);
+      estado = true;
+      delay(500);
+    }
+    else if (HAL_ReadPU(PINB, 2) && estado && HAL_ReadPU(PINB, 2) != ant)
+    {
+      HAL_Reset(PORTD, 3);
+      estado = false;
+      delay(500);
+    }
+    ant = HAL_ReadPU(PINB, 2);
+  }
+}
+
+// Trash

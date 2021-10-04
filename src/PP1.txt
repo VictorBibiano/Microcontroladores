@@ -1,0 +1,50 @@
+/*
+ *
+ * @file  main.cpp
+ * 
+ * @brief Main program
+ * 
+ */
+
+/* includes */
+#include <Arduino.h>
+#include "HAL_GPIO.h"
+#include "HAL_SSEG.h"
+#include "HAL_Keyboard.h"
+
+/* Defines */
+
+/* Variables */
+// btn presionado
+char key;
+
+/* Funciones */
+
+
+/* Setup */
+void setup()
+{
+  // 4 salidas Teclado matricial y 4 entradas
+  DDRD = 0xF;
+  // Salidas encendidas y entradas en pullup
+  PORTD = 0xFF;
+  // 6 salidas 6 segmentos del display
+  DDRB = 0x3F;
+  // Apagar salidas
+  PORTB = 0;
+  // 1 salida Segmento 7 del display
+  DDRC = 1;
+  // Apagar salida
+  PORTC = 0;
+}
+
+/* Loop */
+void loop()
+{
+  // Obtenemos la tecla presionada
+  key = Keyboard_Read();
+  // Mostramos la tecla presionada
+  SSEG_Show(key);
+}
+
+// Trash
